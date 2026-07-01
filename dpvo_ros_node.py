@@ -77,10 +77,6 @@ class DPVONode(Node):
         self.slam = None
         self.frame_count = 0
         self.timestamps = []
-
-        self.last_msg_time = None
-        self.started = False
-        self.finished = False
         self.saved = False
 
         # Pose publisher for glim_ext dpvo_frontend consumption.
@@ -104,9 +100,6 @@ class DPVONode(Node):
         )
         self.sub = self.create_subscription(Image, image_topic, self.image_cb, qos)
         self.get_logger().info(f'Subscribed to {image_topic} (BEST_EFFORT), waiting for images...')
-
-        # Timer to detect end of bag (no new images for 3 seconds after start)
-        self.watchdog = self.create_timer(1.0, self.watchdog_cb)
 
     def _setup_camera(self, camchain):
         """Load cam0 intrinsics/distortion/resolution from a Kalibr camchain yaml
@@ -135,24 +128,8 @@ class DPVONode(Node):
         self.get_logger().info(
             f'Camera fx={fx:.2f} fy={fy:.2f} cx={cx:.2f} cy={cy:.2f}, size {int(width)}x{int(height)}')
 
-    def watchdog_cb(self):
-        import time
-        if self.finished:
-            return
-        if self.started and self.last_msg_time is not None:
-            elapsed = time.time() - self.last_msg_time
-            # Require BOTH timeout AND minimum frame count — tolerate stalls
-            # during slow startup or compute-bound CUDA processing.
-            if elapsed > 15.0 and self.frame_count > 30:
-                self.get_logger().info(f'No images for {elapsed:.1f}s ({self.frame_count} frames processed), bag likely finished.')
-                self.finished = True
-                self.shutdown_and_exit()
-
     @torch.no_grad()
     def image_cb(self, msg):
-        import time
-        self.last_msg_time = time.time()
-        self.started = True
         self.frame_count += 1
         if self.frame_count % self.stride != 0:
             return
@@ -330,7 +307,10 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        # Normal spin return (not already exited via watchdog/SIGINT).
+        # Normal spin return or SIGINT: save trajectory + release VRAM on the
+        # way out. The node never self-terminates on idle -- it runs until the
+        # process is stopped (Ctrl-C / SIGINT), which is correct for a live
+        # streaming node fed by a camera or an externally-controlled bag.
         node.shutdown_and_exit()
 
 

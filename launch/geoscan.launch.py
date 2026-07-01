@@ -28,11 +28,20 @@ from launch.substitutions import LaunchConfiguration
 # .../src/DPVO
 DPVO_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # DPVO deps (torch/yacs/dpvo CUDA ext) live in this venv; system python lacks them.
-# rclpy is still picked up from the sourced ROS distro via PYTHONPATH.
-VENV_PY = os.path.join(DPVO_DIR, '.venv', 'bin', 'python')
-NODE_PY = VENV_PY if os.path.exists(VENV_PY) else 'python3'
-DEFAULT_BAG = os.path.expanduser('~/Documents/Datasets/geoscan/B1/2026-02-12-16-47-48')
-DEFAULT_CAMCHAIN = os.path.expanduser('~/Documents/Datasets/geoscan/geoscan_camchain-imucam.yaml')
+# rclpy is picked up from the sourced ROS distro via PYTHONPATH -- so the venv
+# interpreter MUST be Python 3.12 to match Jazzy's rclpy C extension
+# (_rclpy_pybind11.cpython-312...). The 3.12 venv (.venv312) is preferred; the
+# legacy 3.10 venv (.venv) cannot load the 3.12-only rclpy .so.
+VENV_PY = next(
+    (p for p in (
+        os.path.join(DPVO_DIR, '.venv312', 'bin', 'python'),
+        os.path.join(DPVO_DIR, '.venv', 'bin', 'python'),
+    ) if os.path.exists(p)),
+    'python3',
+)
+NODE_PY = VENV_PY
+DEFAULT_BAG = os.path.expanduser('~/Documents/Datasets/GeoScan/B1/2026-02-12-16-47-48')
+DEFAULT_CAMCHAIN = os.path.expanduser('~/Documents/Datasets/GeoScan/geoscan_camchain-imucam.yaml')
 
 
 def generate_launch_description():

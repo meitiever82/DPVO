@@ -15,6 +15,7 @@ from rclpy.node import Node
 from rclpy.qos import QoSProfile, ReliabilityPolicy, HistoryPolicy
 from sensor_msgs.msg import Image
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Path
 from builtin_interfaces.msg import Time as RosTime
 
 from dpvo.config import cfg
@@ -46,6 +47,7 @@ class DPVONode(Node):
         self.declare_parameter('backend_thresh', 64.0)
         self.declare_parameter('image_topic', '/left_camera/image')
         self.declare_parameter('pose_topic', '/dpvo/pose')
+        self.declare_parameter('path_topic', '/dpvo/path')
         self.declare_parameter('pose_frame_id', 'dpvo_world')
         self.declare_parameter('publish_pose', True)
 
@@ -57,6 +59,7 @@ class DPVONode(Node):
         backend_thresh = gp('backend_thresh')
         image_topic = gp('image_topic')
         pose_topic = gp('pose_topic')
+        path_topic = gp('path_topic')
         self.pose_frame_id = gp('pose_frame_id')
         self.publish_pose = gp('publish_pose')
 
@@ -85,7 +88,12 @@ class DPVONode(Node):
         # original image header timestamp so GLIM can time-sync precisely.
         if self.publish_pose:
             self.pose_pub = self.create_publisher(PoseStamped, pose_topic, 50)
-            self.get_logger().info(f'Publishing poses to {pose_topic}')
+            # Path accumulates every published pose so rviz can draw the live
+            # trajectory as a line (PoseStamped alone only shows the current pose).
+            self.path_pub = self.create_publisher(Path, path_topic, 10)
+            self.path_msg = Path()
+            self.path_msg.header.frame_id = self.pose_frame_id
+            self.get_logger().info(f'Publishing poses to {pose_topic}, path to {path_topic}')
 
         # Subscribe to left camera (BEST_EFFORT to match sensor/replayer QoS)
         qos = QoSProfile(
@@ -220,6 +228,13 @@ class DPVONode(Node):
         ps.pose.orientation.z = float(qz)
         ps.pose.orientation.w = float(qw)
         self.pose_pub.publish(ps)
+
+        # Append to the growing Path and republish for the live rviz trajectory.
+        # (This is the raw per-frame latest pose; DPVO still back-optimizes older
+        # keyframes internally — the final saved TUM file is the refined version.)
+        self.path_msg.header.stamp = stamp
+        self.path_msg.poses.append(ps)
+        self.path_pub.publish(self.path_msg)
 
     def _export_online_poses(self):
         """Build the trajectory from the current keyframe buffer, skipping the

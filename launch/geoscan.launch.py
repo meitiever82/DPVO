@@ -40,8 +40,11 @@ def generate_launch_description():
         DeclareLaunchArgument('backend_thresh', default_value='64.0'),
         DeclareLaunchArgument('image_topic', default_value='/left_camera/image'),
         DeclareLaunchArgument('pose_topic', default_value='/dpvo/pose'),
+        DeclareLaunchArgument('path_topic', default_value='/dpvo/path'),
         DeclareLaunchArgument('pose_frame_id', default_value='dpvo_world'),
         DeclareLaunchArgument('publish_pose', default_value='true'),
+        # rviz live trajectory view
+        DeclareLaunchArgument('rviz', default_value='true', description='launch rviz2 to view the live /dpvo/path trajectory'),
         # optional bag auto-play
         DeclareLaunchArgument('play_bag', default_value='false', description='auto-play the bag after the node starts'),
         DeclareLaunchArgument('bag', default_value=DEFAULT_BAG),
@@ -60,11 +63,18 @@ def generate_launch_description():
             '-p', ['backend_thresh:=', lc('backend_thresh')],
             '-p', ['image_topic:=', lc('image_topic')],
             '-p', ['pose_topic:=', lc('pose_topic')],
+            '-p', ['path_topic:=', lc('path_topic')],
             '-p', ['pose_frame_id:=', lc('pose_frame_id')],
             '-p', ['publish_pose:=', lc('publish_pose')],
         ],
         cwd=DPVO_DIR,  # so `import dpvo` resolves, matching manual `python3 dpvo_ros_node.py`
         output='screen',
+    )
+
+    rviz = ExecuteProcess(
+        cmd=['rviz2', '-d', os.path.join(DPVO_DIR, 'launch', 'dpvo.rviz')],
+        output='screen',
+        condition=IfCondition(lc('rviz')),
     )
 
     # Give the node ~5s to load weights and start subscribing before replaying.
@@ -86,4 +96,4 @@ def generate_launch_description():
         ],
     )
 
-    return LaunchDescription(launch_args + [dpvo_node, play_bag])
+    return LaunchDescription(launch_args + [dpvo_node, rviz, play_bag])

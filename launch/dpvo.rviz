@@ -1,65 +1,143 @@
 Panels:
   - Class: rviz_common/Displays
+    Help Height: 138
     Name: Displays
     Property Tree Widget:
       Expanded:
         - /Path1
+        - /Image1
       Splitter Ratio: 0.5
+    Tree Height: 1320
 Visualization Manager:
   Class: ""
   Displays:
-    - Class: rviz_default_plugins/Grid
-      Name: Grid
-      Enabled: true
-      Color: 160; 160; 164
+    - Alpha: 0.5
       Cell Size: 1
+      Class: rviz_default_plugins/Grid
+      Color: 160; 160; 164
+      Enabled: true
+      Line Style:
+        Line Width: 0.029999999329447746
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XY
       Plane Cell Count: 20
       Reference Frame: <Fixed Frame>
-    - Class: rviz_default_plugins/Path
-      Name: Path
-      Enabled: true
-      Topic:
-        Value: /dpvo/path
-        Depth: 10
-        Reliability Policy: Reliable
-        Durability Policy: Volatile
+      Value: true
+    - Alpha: 1
+      Buffer Length: 1
+      Class: rviz_default_plugins/Path
       Color: 25; 255; 0
-      Line Style: Lines
-      Line Width: 0.03
-      Pose Style: None
-    - Class: rviz_default_plugins/Pose
-      Name: CurrentPose
       Enabled: true
+      Head Diameter: 0.30000001192092896
+      Head Length: 0.20000000298023224
+      Length: 0.30000001192092896
+      Line Style: Lines
+      Line Width: 0.029999999329447746
+      Name: Path
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Pose Color: 255; 85; 255
+      Pose Style: None
+      Radius: 0.029999999329447746
+      Shaft Diameter: 0.10000000149011612
+      Shaft Length: 0.10000000149011612
       Topic:
-        Value: /dpvo/pose
-        Depth: 5
-        Reliability Policy: Reliable
+        Depth: 10
         Durability Policy: Volatile
-      Shape: Axes
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /dpvo/path
+      Value: true
+    - Alpha: 1
       Axes Length: 0.5
-      Axes Radius: 0.05
+      Axes Radius: 0.05000000074505806
+      Class: rviz_default_plugins/Pose
+      Color: 255; 25; 0
+      Enabled: true
+      Head Length: 0.30000001192092896
+      Head Radius: 0.10000000149011612
+      Name: CurrentPose
+      Shaft Length: 1
+      Shaft Radius: 0.05000000074505806
+      Shape: Axes
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /dpvo/pose
+      Value: true
+    - Class: rviz_default_plugins/Image
+      Enabled: true
+      Max Value: 1
+      Median window: 5
+      Min Value: 0
+      Name: Image
+      Normalize Range: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /left_camera/image
+      Value: true
+  Enabled: true
   Global Options:
-    Fixed Frame: dpvo_world
     Background Color: 48; 48; 48
+    Fixed Frame: dpvo_world
     Frame Rate: 30
+  Name: root
   Tools:
     - Class: rviz_default_plugins/MoveCamera
     - Class: rviz_default_plugins/FocusCamera
     - Class: rviz_default_plugins/Measure
+      Line color: 128; 128; 0
+  Transformation:
+    Current:
+      Class: rviz_default_plugins/TF
+  Value: true
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Name: Current View
-      Distance: 15
+      Distance: 137.0299530029297
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.05999999865889549
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
       Focal Point:
         X: 0
         Y: 0
         Z: 0
-      Pitch: 0.6
-      Yaw: 0.8
+      Focal Shape Fixed Size: true
+      Focal Shape Size: 0.05000000074505806
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.009999999776482582
+      Pitch: 1.1249992847442627
       Target Frame: <Fixed Frame>
+      Value: Orbit (rviz_default_plugins)
+      Yaw: 3.0600016117095947
+    Saved: ~
 Window Geometry:
-  Height: 800
-  Width: 1200
+  Displays:
+    collapsed: false
+  Height: 2752
   Hide Left Dock: false
   Hide Right Dock: true
+  Image:
+    collapsed: false
+  QMainWindow State: 000000ff00000000fd00000001000000000000037a00000a24fc0200000002fb000000100044006900730070006c006100790073010000006e000006200000018200fffffffb0000000a0049006d006100670065010000069a000003f80000004a00ffffff00000fee00000a2400000004000000040000000800000008fc0000000100000002000000010000000a0054006f006f006c00730100000000ffffffff0000000000000000
+  Width: 4980
+  X: 5900
+  Y: 54

@@ -1,3 +1,10 @@
+'''
+Author: meitiever
+Date: 2026-07-01 16:25:54
+LastEditors: meitiever
+LastEditTime: 2026-07-01 16:47:49
+Description: content
+'''
 #!/usr/bin/env python3
 """Launch DPVO ROS2 node on the GeoScan B1 bag.
 
@@ -35,7 +42,7 @@ def generate_launch_description():
         DeclareLaunchArgument('network', default_value=os.path.join(DPVO_DIR, 'dpvo.pth')),
         DeclareLaunchArgument('config', default_value=os.path.join(DPVO_DIR, 'config/geoscan/435i.yaml')),
         DeclareLaunchArgument('camchain', default_value=DEFAULT_CAMCHAIN, description='Kalibr camchain yaml (cam0 intrinsics); empty = built-in default'),
-        DeclareLaunchArgument('stride', default_value='1', description='process every Nth frame'),
+        DeclareLaunchArgument('stride', default_value='2', description='process every Nth frame'),
         DeclareLaunchArgument('save_trajectory', default_value=os.path.join(DPVO_DIR, 'results/dpvo_ros_geoscan_traj.txt')),
         DeclareLaunchArgument('backend_thresh', default_value='64.0'),
         DeclareLaunchArgument('image_topic', default_value='/left_camera/image'),

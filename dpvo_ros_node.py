@@ -81,6 +81,7 @@ class DPVONode(Node):
         self.last_msg_time = None
         self.started = False
         self.finished = False
+        self.saved = False
 
         # Pose publisher for glim_ext dpvo_frontend consumption.
         # Publishes per-frame PoseStamped after each DPVO processing call; the
@@ -145,8 +146,7 @@ class DPVONode(Node):
             if elapsed > 15.0 and self.frame_count > 30:
                 self.get_logger().info(f'No images for {elapsed:.1f}s ({self.frame_count} frames processed), bag likely finished.')
                 self.finished = True
-                self.save_trajectory()
-                rclpy.shutdown()
+                self.shutdown_and_exit()
 
     @torch.no_grad()
     def image_cb(self, msg):
@@ -252,6 +252,8 @@ class DPVONode(Node):
         return poses, tstamps
 
     def save_trajectory(self):
+        if self.saved:
+            return
         if self.slam is None:
             self.get_logger().warn('No SLAM data to save')
             return
@@ -283,7 +285,32 @@ class DPVONode(Node):
                 qx, qy, qz, qw = traj_est[i, 3:7]
                 f.write(f"{ts:.6f} {tx:.6f} {ty:.6f} {tz:.6f} {qx:.6f} {qy:.6f} {qz:.6f} {qw:.6f}\n")
 
+        self.saved = True
         self.get_logger().info(f'Saved {len(tstamps_idx)} poses to {self.save_path}')
+
+    def shutdown_and_exit(self):
+        """Save, release CUDA, and force-exit.
+
+        After a long sequence DPVO's process sometimes lingers holding its CUDA
+        context (~GB of VRAM), which blocks the next launch (import-time OOM).
+        We release what we can and then os._exit() to guarantee the OS reclaims
+        the GPU memory — bypassing any hung non-daemon thread or stuck CUDA
+        context that a clean rclpy shutdown would wait on.
+        """
+        try:
+            self.save_trajectory()
+        except Exception as e:
+            self.get_logger().warn(f'save on shutdown failed: {e}')
+        try:
+            self.slam = None
+            torch.cuda.synchronize()
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+        self.get_logger().info('DPVO node exiting, VRAM released.')
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os._exit(0)
 
 
 def main(args=None):
@@ -292,13 +319,9 @@ def main(args=None):
     rclpy.init(args=args)
     node = DPVONode()
 
-    # Handle Ctrl+C gracefully
+    # Handle Ctrl+C gracefully (save + release VRAM + hard exit)
     def shutdown_handler(sig, frame):
-        node.save_trajectory()
-        node.destroy_node()
-        if rclpy.ok():
-            rclpy.shutdown()
-        sys.exit(0)
+        node.shutdown_and_exit()
 
     signal.signal(signal.SIGINT, shutdown_handler)
 
@@ -307,13 +330,8 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        node.save_trajectory()
-        try:
-            node.destroy_node()
-        except Exception:
-            pass
-        if rclpy.ok():
-            rclpy.shutdown()
+        # Normal spin return (not already exited via watchdog/SIGINT).
+        node.shutdown_and_exit()
 
 
 if __name__ == '__main__':
